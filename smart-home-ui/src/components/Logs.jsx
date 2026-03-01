@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "https://smart-home-4b7r.onrender.com/";
+const API = "https://smart-home-4b7r.onrender.com";
 
 export default function Logs() {
   const [logs, setLogs] = useState([]);
