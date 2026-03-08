@@ -20,7 +20,7 @@ except Exception as e:
 
 print("Direct Test: Importing firebase_service")
 try:
-    from services.firebase_service import get_all_devices, get_all_logs
+    from services.firebase_service import get_all_devices_from_db as get_all_devices, get_all_logs_from_db as get_all_logs
     print("Direct Test: firebase_service imported")
 except Exception as e:
     print(f"Direct Test ERROR during import: {e}")

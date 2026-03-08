@@ -28,12 +28,23 @@ initialize_engine()
 def process_ml_result(data):
     global LOG_BUFFER
     
+    # Only log and update if there's a state change or it's a system startup
+    is_startup = data.intent == "SYSTEM_STARTUP"
+    state_changed = False
+
     if data.intent == "TURN_LIGHT_ON":
-        STATE["light"] = True
-        update_device("light", True) # Background/Try-except update
+        if not STATE["light"]:
+            STATE["light"] = True
+            update_device("light", True)
+            state_changed = True
     elif data.intent == "TURN_LIGHT_OFF":
-        STATE["light"] = False
-        update_device("light", False)
+        if STATE["light"]:
+            STATE["light"] = False
+            update_device("light", False)
+            state_changed = True
+
+    if not state_changed and not is_startup:
+        return STATE
 
     log_entry = {
         "intent": data.intent,

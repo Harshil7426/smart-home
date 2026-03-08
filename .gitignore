@@ -1,3 +1,4 @@
 smart-home-backend/ServiceAccount.json
 .env
 __pycache__/
+smart-home-backend/db.json

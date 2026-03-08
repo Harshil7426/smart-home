@@ -40,6 +40,7 @@ landmarker = HandLandmarker.create_from_options(options)
 
 # --- Global State ---
 last_intent = None
+last_intent_time = 0
 current_frame = None
 lock = threading.Lock()
 
@@ -112,8 +113,8 @@ def main():
         draw_landmarks(frame, result)
 
         current_time = time.time()
-        if gesture and (gesture != last_intent or current_time - last_intent_time > 3):
-            print(f"Gesture: {gesture}")
+        if gesture and gesture != last_intent:
+            print(f"Gesture Change Detect: {gesture}")
             send_to_backend(gesture)
             last_intent, last_intent_time = gesture, current_time
 

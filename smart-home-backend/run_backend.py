@@ -2,7 +2,7 @@ import os
 import json
 
 # Load ServiceAccount.json and set FIREBASE_KEY env var BEFORE imports
-with open("ServiceAccount.json", "r") as f:
+with open("db.json", "r") as f:
     cert = f.read()
     os.environ["FIREBASE_KEY"] = cert
 
