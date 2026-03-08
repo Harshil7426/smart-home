@@ -31,5 +31,5 @@ def get_all_devices():
 
 
 def get_all_logs():
-    logs_ref = db.collection("logs").stream()
+    logs_ref = db.collection("logs").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(50).stream()
     return [doc.to_dict() for doc in logs_ref]

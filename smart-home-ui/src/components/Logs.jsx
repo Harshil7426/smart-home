@@ -9,7 +9,7 @@ export default function Logs() {
   const fetchLogs = async () => {
     try {
       const res = await axios.get(`${API}/logs`);
-      setLogs(res.data.reverse().slice(0, 50)); // Keep last 50
+      setLogs(res.data.slice(0, 50)); // Keep last 50
     } catch (err) {
       console.error("Error fetching logs:", err);
     }
