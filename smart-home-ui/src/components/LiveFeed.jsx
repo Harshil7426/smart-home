@@ -1,28 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const API = "https://smart-home-4b7r.onrender.com";
+const API = "http://localhost:8000";
+const ML_STREAM_URL = "http://localhost:5001/video_feed";
 
 export default function LiveFeed() {
-    const videoRef = useRef(null);
     const [lastIntent, setLastIntent] = useState(null);
+    const [streamError, setStreamError] = useState(false);
 
     useEffect(() => {
-        async function setupCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                }
-            } catch (err) {
-                console.error("Error accessing camera:", err);
-            }
-        }
-        setupCamera();
-
         const fetchLastIntent = async () => {
             try {
-                const res = await axios.get(`${API}/logs`);
+                const res = await axios.get(`${BACKEND_API}/logs`);
                 if (res.data.length > 0) {
                     const latest = res.data[res.data.length - 1];
                     // Only show if it happened in the last 10 seconds
@@ -39,31 +28,56 @@ export default function LiveFeed() {
         };
 
         const interval = setInterval(fetchLastIntent, 2000);
-
-        return () => {
-            clearInterval(interval);
-            if (videoRef.current && videoRef.current.srcObject) {
-                const tracks = videoRef.current.srcObject.getTracks();
-                tracks.forEach(track => track.stop());
-            }
-        };
+        return () => clearInterval(interval);
     }, []);
 
     return (
         <div className="glass-card">
-            <div className="section-title">Live Vision Feed</div>
-            <div className="live-feed-container">
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="live-feed-video"
-                />
+            <div className="section-title">ML Vision Stream</div>
+            <div className="live-feed-container" style={{ background: '#1a1c23' }}>
+                {!streamError ? (
+                    <img
+                        src={ML_STREAM_URL}
+                        alt="ML Vision Stream"
+                        className="live-feed-video"
+                        onError={() => setStreamError(true)}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                ) : (
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100%',
+                        color: 'var(--text-secondary)',
+                        textAlign: 'center',
+                        padding: '20px'
+                    }}>
+                        <span style={{ fontSize: '2rem', marginBottom: '10px' }}>⚠️</span>
+                        ML Engine Offline<br />
+                        <span style={{ fontSize: '0.8rem' }}>Please ensure `ml_engine.py` is running on port 5001</span>
+                        <button
+                            onClick={() => setStreamError(false)}
+                            style={{
+                                marginTop: '15px',
+                                background: 'var(--accent-cyan)',
+                                border: 'none',
+                                padding: '8px 16px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '600'
+                            }}
+                        >
+                            Retry Connection
+                        </button>
+                    </div>
+                )}
+
                 <div className="live-feed-overlay">
                     <div className="live-status">
                         <span style={{ width: 8, height: 8, background: '#fff', borderRadius: '50%' }}></span>
-                        LIVE
+                        LIVE STREAM
                     </div>
 
                     {lastIntent && (
@@ -95,15 +109,15 @@ export default function LiveFeed() {
                         position: 'absolute',
                         bottom: '20px',
                         left: '20px',
-                        background: 'rgba(255, 255, 255, 0.05)',
+                        background: 'rgba(0, 242, 255, 0.1)',
                         padding: '10px 20px',
                         borderRadius: '8px',
-                        border: '1px solid var(--glass-border)',
-                        color: 'var(--text-secondary)',
+                        border: '1px solid var(--accent-cyan)',
+                        color: 'var(--accent-cyan)',
                         fontWeight: '600',
                         fontSize: '0.8rem'
                     }}>
-                        AI CORE: OPTIMIZED
+                        AI CORE: ACTIVE
                     </div>
                 </div>
             </div>
