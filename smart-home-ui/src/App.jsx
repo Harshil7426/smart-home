@@ -1,7 +1,6 @@
 import Devices from "./components/Devices";
 import Logs from "./components/Logs";
 import LiveFeed from "./components/LiveFeed";
-import Users from "./components/Users";
 
 export default function App() {
   return (
@@ -10,7 +9,6 @@ export default function App() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <LiveFeed />
-        <Users />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

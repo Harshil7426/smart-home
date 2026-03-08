@@ -44,7 +44,6 @@ export default function Logs() {
           logs.map((log, index) => (
             <div key={index} className="log-entry">
               <span className="log-time">[{formatTime(log.timestamp)}]</span>
-              <span className="log-user">{log.user}</span>
               <span className="log-message">→ {log.intent.replace(/_/g, ' ')}</span>
             </div>
           ))

@@ -3,8 +3,6 @@ from services.firebase_service import (
     save_log,
     update_device,
     get_all_devices,
-    apply_user_preferences,
-    get_user,
     get_all_logs
 )
 
