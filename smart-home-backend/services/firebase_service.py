@@ -2,68 +2,93 @@ import os
 import json
 import firebase_admin
 from firebase_admin import credentials, firestore
+import threading
 
-print("Firebase Service: Initializing...")
-firebase_key = os.environ.get("FIREBASE_KEY")
-if not firebase_key:
-    # Try to load it if missing (sometimes uvicorn child processes lose env vars if not careful)
+# Global Firebase objects
+db = None
+
+def initialize_firebase():
+    global db
+    if db is not None:
+        return db
+
+    firebase_key = os.environ.get("FIREBASE_KEY")
+    if not firebase_key:
+        try:
+            with open("ServiceAccount.json", "r") as f:
+                firebase_key = f.read()
+                os.environ["FIREBASE_KEY"] = firebase_key
+        except:
+            return None
+
     try:
-        with open("/Users/harshil/Documents/smart home/smart-home-backend/ServiceAccount.json", "r") as f:
-            firebase_key = f.read()
-            os.environ["FIREBASE_KEY"] = firebase_key
+        cred_dict = json.loads(firebase_key)
+        cred = credentials.Certificate(cred_dict)
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app(cred)
+        db = firestore.client()
+        return db
     except:
-        print("Firebase Service ERROR: FIREBASE_KEY not in env and ServiceAccount.json missing")
+        return None
 
-cred_dict = json.loads(firebase_key)
-cred = credentials.Certificate(cred_dict)
-
-if not firebase_admin._apps:
-    firebase_admin.initialize_app(cred)
-db = firestore.client()
-print("Firebase Service: DB Client connected")
-
+# Initialize early
+initialize_firebase()
 
 def save_log(log_data):
-    print(f"Firebase Service: Saving log {log_data.get('intent')}")
-    db.collection("logs").add(log_data)
-
+    if not db: return
+    # Run in background thread to avoid blocking if quota hit
+    def bg_save():
+        try:
+            db.collection("logs").add(log_data)
+        except:
+            pass
+    threading.Thread(target=bg_save, daemon=True).start()
 
 def update_device(device_name, state):
-    print(f"Firebase Service: Updating device {device_name} to {state}")
-    db.collection("devices").document(device_name).set({
-        "state": state
-    })
+    if not db: return
+    def bg_update():
+        try:
+            db.collection("devices").document(device_name).set({"state": state})
+        except:
+            pass
+    threading.Thread(target=bg_update, daemon=True).start()
 
+def get_all_devices_from_db(timeout=3):
+    if not db: return {}
+    
+    result = {}
+    completed = threading.Event()
 
-def get_all_devices():
-    print("Firebase Service: Fetching all devices...")
-    try:
-        # Use .get() instead of .stream()
-        docs = db.collection("devices").get()
-        devices = {}
-        for doc in docs:
-            devices[doc.id] = doc.to_dict().get("state", False)
-        print(f"Firebase Service: Found {len(devices)} devices")
-        return devices
-    except Exception as e:
-        print(f"Firebase Service ERROR in get_all_devices: {e}")
-        import traceback
-        traceback.print_exc()
-        return {}
+    def fetch():
+        nonlocal result
+        try:
+            docs = db.collection("devices").get()
+            result = {doc.id: doc.to_dict().get("state", False) for doc in docs}
+        except:
+            pass
+        completed.set()
 
+    thread = threading.Thread(target=fetch, daemon=True)
+    thread.start()
+    completed.wait(timeout)
+    return result
 
-def get_all_logs():
-    print("Firebase Service: Fetching all logs...")
-    try:
-        # Use .get() and manual sort for now to avoid index issues if needed
-        # But order_by on one field should be fine with .get()
-        docs = db.collection("logs").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(50).get()
-        logs = [doc.to_dict() for doc in docs]
-        print(f"Firebase Service: Found {len(logs)} logs")
-        return logs
-    except Exception as e:
-        print(f"Firebase Service ERROR in get_all_logs: {e}")
-        # Fallback to unsorted logs if order_by fails
-        print("Firebase Service: Retrying without order_by")
-        docs = db.collection("logs").limit(50).get()
-        return [doc.to_dict() for doc in docs]
+def get_all_logs_from_db(timeout=3):
+    if not db: return []
+    
+    result = []
+    completed = threading.Event()
+
+    def fetch():
+        nonlocal result
+        try:
+            docs = db.collection("logs").order_by("timestamp", direction=firestore.Query.DESCENDING).limit(50).get()
+            result = [doc.to_dict() for doc in docs]
+        except:
+            pass
+        completed.set()
+
+    thread = threading.Thread(target=fetch, daemon=True)
+    thread.start()
+    completed.wait(timeout)
+    return result
