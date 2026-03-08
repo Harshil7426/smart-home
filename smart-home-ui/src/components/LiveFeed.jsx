@@ -11,7 +11,7 @@ export default function LiveFeed() {
     useEffect(() => {
         const fetchLastIntent = async () => {
             try {
-                const res = await axios.get(`${BACKEND_API}/logs`);
+                const res = await axios.get(`${API}/logs`);
                 if (res.data.length > 0) {
                     const latest = res.data[res.data.length - 1];
                     // Only show if it happened in the last 10 seconds

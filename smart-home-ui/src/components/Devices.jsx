@@ -36,7 +36,7 @@ export default function Devices() {
   return (
     <div className="glass-card">
       <div className="section-title">Device Controls</div>
-      {Object.keys(devices).map((device) => (
+      {Object.keys(devices).filter(device => device === 'light').map((device) => (
         <div key={device} className={`device-toggle ${devices[device] ? 'active' : ''}`}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontWeight: '600', textTransform: 'capitalize' }}>

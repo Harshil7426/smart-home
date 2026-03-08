@@ -33,37 +33,3 @@ def get_all_devices():
 def get_all_logs():
     logs_ref = db.collection("logs").stream()
     return [doc.to_dict() for doc in logs_ref]
-
-
-def create_user(username, preferences):
-    db.collection("users").document(username).set(preferences)
-
-
-def get_user(username):
-    doc = db.collection("users").document(username).get()
-    if doc.exists:
-        return doc.to_dict()
-    return None
-
-
-def get_all_users():
-    users_ref = db.collection("users").stream()
-    return {doc.id: doc.to_dict() for doc in users_ref}
-
-
-def apply_user_preferences(username):
-    user_doc = db.collection("users").document(username).get()
-    if not user_doc.exists:
-        return None
-
-    preferences = user_doc.to_dict()
-
-    db.collection("devices").document("light").set({
-        "state": preferences.get("default_light", False)
-    })
-
-    db.collection("devices").document("fan").set({
-        "state": preferences.get("default_fan", False)
-    })
-
-    return preferences

@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 
 class MLResult(BaseModel):
-    user: str
     intent: str
     confidence: float
 

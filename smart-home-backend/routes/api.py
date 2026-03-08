@@ -30,32 +30,3 @@ def manual_control(control: DeviceControl):
 @router.get("/logs")
 def logs():
     return get_logs()
-
-
-from services.firebase_service import (
-    create_user,
-    get_user,
-    get_all_users
-)
-
-from pydantic import BaseModel
-
-class UserCreate(BaseModel):
-    username: str
-    default_light: bool
-    default_fan: bool
-    permissions: str
-
-@router.post("/users")
-def add_user(user: UserCreate):
-    preferences = {
-        "default_light": user.default_light,
-        "default_fan": user.default_fan,
-        "permissions": user.permissions
-    }
-    create_user(user.username, preferences)
-    return {"status": "user created"}
-
-@router.get("/users")
-def list_users():
-    return get_all_users()
