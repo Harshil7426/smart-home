@@ -7,16 +7,24 @@ export default function Devices() {
   const [devices, setDevices] = useState({});
 
   const fetchDevices = async () => {
-    const res = await axios.get(`${API}/devices`);
-    setDevices(res.data);
+    try {
+      const res = await axios.get(`${API}/devices`);
+      setDevices(res.data);
+    } catch (err) {
+      console.error("Error fetching devices:", err);
+    }
   };
 
   const toggleDevice = async (device, state) => {
-    await axios.post(`${API}/device-control`, {
-      device,
-      state,
-    });
-    fetchDevices();
+    try {
+      await axios.post(`${API}/device-control`, {
+        device,
+        state,
+      });
+      fetchDevices();
+    } catch (err) {
+      console.error("Error toggling device:", err);
+    }
   };
 
   useEffect(() => {
@@ -26,18 +34,24 @@ export default function Devices() {
   }, []);
 
   return (
-    <div style={{ marginBottom: "30px" }}>
-      <h2>Devices</h2>
+    <div className="glass-card">
+      <div className="section-title">Device Controls</div>
       {Object.keys(devices).map((device) => (
-        <div key={device}>
-          <strong>{device.toUpperCase()}</strong> :{" "}
-          {devices[device] ? "ON" : "OFF"}
-          <button
-            onClick={() => toggleDevice(device, !devices[device])}
-            style={{ marginLeft: "10px" }}
-          >
-            Toggle
-          </button>
+        <div key={device} className={`device-toggle ${devices[device] ? 'active' : ''}`}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontWeight: '600', textTransform: 'capitalize' }}>
+              {device}
+            </span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Connected • {devices[device] ? 'Running' : 'Standby'}
+            </span>
+          </div>
+          <input
+            type="checkbox"
+            className="toggle-switch"
+            checked={devices[device]}
+            onChange={() => toggleDevice(device, !devices[device])}
+          />
         </div>
       ))}
     </div>
